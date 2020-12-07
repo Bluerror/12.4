@@ -5,32 +5,21 @@
 std::vector<Point>  mousePoints;
 Point points;
 
-
 int dftDemo() {
 
-	cv::Mat srcMat = imread("C://Users//Lenovo//source//repos//12.4//ai.jpg", 0);
-	cv::Mat srcMat1 = imread("C://Users//Lenovo//source//repos//12.4//ma.jpg", 0);
+	cv::Mat srcMat = imread("..//testImages\\rose.jpg", 0);
 	cv::Mat magMat;
-	cv::Mat magMat1;
 
 	if (srcMat.empty()) {
-		std::cout << "failed to read image!:" << std::endl;
-		return -1;
-	}
-	if (srcMat1.empty()) {
 		std::cout << "failed to read image!:" << std::endl;
 		return -1;
 	}
 
 	//把图像转换为可视的傅里叶变换图像
 	calcVisibalMag(srcMat, magMat);
-	calcVisibalMag(srcMat1, magMat1);
 
-	imshow("Input Image", srcMat);   
+	imshow("Input Image", srcMat);    // Show the result
 	imshow("spectrum magnitude", magMat);
-
-	imshow("Input Image1", srcMat1);
-	imshow("spectrum magnitude1", magMat1);
 	waitKey(0);
 
 	return 0;
@@ -40,34 +29,22 @@ int dftDemo() {
 
 int removeFrequnce()
 {
-	cv::Mat srcMat = imread("C://Users//Lenovo//source//repos//12.4//ai.jpg", 0);
-	cv::Mat srcMat1 = imread("C://Users//Lenovo//source//repos//12.4//ma.jpg", 0);
+	cv::Mat srcMat = imread("..//testImages\\rose.jpg", 0);
 	cv::Mat magMat;
-	cv::Mat magMat1;
 	cv::Mat phMat;
-	cv::Mat phMat1;
 	cv::Mat maskMat;
-	cv::Mat maskMat1;
 	double normVal;
-	double normVal1;
 
 	if (srcMat.empty()) {
 		std::cout << "failed to read image!:" << std::endl;
 		return -1;
 	}
 
-	if (srcMat1.empty()) {
-		std::cout << "failed to read image!:" << std::endl;
-		return -1;
-	}
-
 	//输出可视化的mag，以及相位谱，以及归一化系数
 	calcVisbalDft(srcMat, magMat, phMat, normVal);
-	calcVisbalDft(srcMat1, magMat1, phMat1, normVal1);
-
 
 	//在幅值谱上，通过鼠标选择，需要去掉的频率
-	//selectPolygon(magMat, maskMat);
+	selectPolygon(magMat, maskMat);
 
 	//逆变换
 
@@ -137,26 +114,28 @@ int selectPolygon(cv::Mat srcMat, cv::Mat& dstMat)
 	return 0;
 }
 
-int calcVisibalMag(cv::Mat srcMat, cv::Mat& dstMat, cv::Mat srcMat1, cv::Mat& dstMat1)
+
+/***********输入一张图片，输出其傅里叶变换后的可视化的幅值谱********************/
+int calcVisibalMag(cv::Mat srcMat, cv::Mat& dstMat)
 {
 
 	if (srcMat.empty()) {
 		std::cout << "failed to read image!:" << std::endl;
 		return -1;
-
-		if (srcMat1.empty()) {
-			std::cout << "failed to read image!:" << std::endl;
-			return -1;
 	}
 
 	Mat padMat;
-	
+	//当图像的尺寸是2，3，5的整数倍时，离散傅里叶变换的计算速度最快。	
+	//获得输入图像的最佳变换尺寸
 	int m = getOptimalDFTSize(srcMat.rows);
 	int n = getOptimalDFTSize(srcMat.cols);
 
 	copyMakeBorder(srcMat, padMat, 0, m - srcMat.rows, 0, n - srcMat.cols, BORDER_CONSTANT, Scalar::all(0));
 
 
+
+
+	//定义一个数组,存储频域转换成float类型的对象，再存储一个和它一样大小空间的对象来存储复数部分
 	Mat planes[] = { Mat_<float>(padMat), Mat::zeros(padMat.size(), CV_32F) };
 	Mat complexMat;
 
@@ -167,6 +146,9 @@ int calcVisibalMag(cv::Mat srcMat, cv::Mat& dstMat, cv::Mat srcMat1, cv::Mat& ds
 	dft(complexMat, complexMat);
 
 
+	//将双通道的图分离成量个单通道的图 
+	//实部：planes[0] = Re(DFT(I),
+	//虚部：planes[1]=  Im(DFT(I))) 
 	split(complexMat, planes);
 	//求相位，保存在planes[0]
 	magnitude(planes[0], planes[1], planes[0]);
@@ -182,6 +164,12 @@ int calcVisibalMag(cv::Mat srcMat, cv::Mat& dstMat, cv::Mat srcMat1, cv::Mat& ds
 	magMat = magMat(Rect(0, 0, magMat.cols & -2, magMat.rows & -2));
 	int cx = magMat.cols / 2;
 	int cy = magMat.rows / 2;
+	//将图像移相
+	/*
+	0 | 1         3 | 2
+	-------  ===> -------
+	2 | 3         1 | 0
+	*/
 	Mat q0(magMat, Rect(0, 0, cx, cy));
 	Mat q1(magMat, Rect(cx, 0, cx, cy));
 	Mat q2(magMat, Rect(0, cy, cx, cy));
@@ -207,7 +195,7 @@ int calcVisibalMag(cv::Mat srcMat, cv::Mat& dstMat, cv::Mat srcMat1, cv::Mat& ds
 int calcVisbalDft(cv::Mat srcMat, cv::Mat& magMat, cv::Mat& ph, double& normVal)
 {
 	cv::Mat dst;
-	cv::Mat src = imread("C://Users//Lenovo//source//repos//12.4//ai.jpg", 0);
+	cv::Mat src = imread("..//testImages\\rose.jpg", 0);
 
 	int m = getOptimalDFTSize(src.rows); //2,3,5的倍数有更高效率的傅里叶变换
 	int n = getOptimalDFTSize(src.cols);
@@ -335,7 +323,7 @@ int calcDft2Image(cv::Mat magMat, cv::Mat ph, double normVal, cv::Mat& dstMat)
 
 int mouseROI()
 {
-	cv::Mat srcMat = imread("C://Users//Lenovo//source//repos//12.4//ai.jpg");
+	cv::Mat srcMat = imread("..//testImages\\rose.jpg");
 	cv::Mat dstMat;
 
 	selectPolygon(srcMat, dstMat);
@@ -353,13 +341,13 @@ int ifftDemo()
 {
 	cv::Mat dst;
 
-	cv::Mat src = imread("C://Users//Lenovo//source//repos//12.4//ai.jpg", 0);
+	cv::Mat srcMat = imread("..//testImages\\rose.jpg", 0);
 
-	int m = getOptimalDFTSize(src.rows); //2,3,5的倍数有更高效率的傅里叶变换
-	int n = getOptimalDFTSize(src.cols);
+	int m = getOptimalDFTSize(srcMat.rows); //2,3,5的倍数有更高效率的傅里叶变换
+	int n = getOptimalDFTSize(srcMat.cols);
 	Mat padded;
 	//把灰度图像放在左上角,在右边和下边扩展图像,扩展部分填充为0;
-	copyMakeBorder(src, padded, 0, m - src.rows, 0, n - src.cols, BORDER_CONSTANT, Scalar::all(0));
+	copyMakeBorder(srcMat, padded, 0, m - srcMat.rows, 0, n - srcMat.cols, BORDER_CONSTANT, Scalar::all(0));
 	//planes[0]为dft变换的实部，planes[1]为虚部，ph为相位， plane_true=mag为幅值
 	Mat planes[] = { Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F) };
 	Mat planes_true = Mat_<float>(padded);
@@ -452,23 +440,21 @@ int ifftDemo()
 
 
 	//-----------------------傅里叶的逆变换-----------------------------------
-	Mat ifft(Size(src.cols, src.rows), CV_8UC1);
+	Mat ifft(Size(srcMat.cols, srcMat.rows), CV_8UC1);
 	//傅里叶逆变换
 	idft(complexImg, ifft, DFT_REAL_OUTPUT);
 	normalize(ifft, ifft, 0, 1, CV_MINMAX);
 
-	Rect rect(0, 0, src.cols, src.rows);
+	Rect rect(0, 0, srcMat.cols, srcMat.rows);
 	dst = ifft(rect);
 	dst = dst * 255;
 
 	cv::Mat dspMat;
 	dst.convertTo(dspMat, CV_8UC1);
 	imshow("dst", dspMat);
-	imshow("src", src);
+	imshow("src", srcMat);
 	waitKey(0);
 
 	return 0;
 
 }
-
-

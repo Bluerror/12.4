@@ -141,8 +141,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="coopera.cpp" />
     <ClCompile Include="EXE1.cpp" />
-    <ClCompile Include="exe2.cpp" />
+    <ClCompile Include="exee2.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

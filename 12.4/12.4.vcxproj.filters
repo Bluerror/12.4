@@ -18,10 +18,13 @@
     <ClCompile Include="EXE1.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="exe2.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="exee2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="coopera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
